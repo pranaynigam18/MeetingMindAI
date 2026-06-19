@@ -1,6 +1,6 @@
 from services.transcriber import transcribe_audio
-from services.gemini_service import generate_summary
-from services.action_extractor import extract_actions
+from services.intelligence_engine import analyze_meeting
+from services.storage import save_meeting
 
 audio_path = "uploads/meeting_test.mp3.ogg"
 
@@ -10,14 +10,14 @@ transcript = transcribe_audio(audio_path)
 
 print(transcript)
 
-print("\n===== SUMMARY =====\n")
+print("\n===== ANALYZING =====\n")
 
-summary = generate_summary(transcript)
+result = analyze_meeting(transcript)
+filepath = save_meeting(
+    transcript,
+    result
+)
 
-print(summary)
-
-print("\n===== ACTION ITEMS =====\n")
-
-actions = extract_actions(transcript)
-
-print(actions)
+print("\nSaved To:")
+print(filepath)
+print(result)

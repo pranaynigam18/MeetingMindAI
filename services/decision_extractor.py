@@ -1,14 +1,12 @@
 from services.gemini_service import model
 import json
 
-def extract_actions(transcript):
+def extract_decisions(transcript):
 
     prompt = f"""
 You are an expert meeting assistant.
-Analyze the transcript carefully.
-Pay close attention to names, deadlines, commitments, and assigned responsibilities.
-Extract all the action items from the transcript. 
 
+Extract all decisions made during the meeting.
 
 Return ONLY valid JSON.
 
@@ -16,13 +14,11 @@ Example:
 
 [
   {{
-    "owner":"Aayush",
-    "task":"Complete frontend",
-    "deadline":"Friday"
+    "decision":"Use PostgreSQL instead of MongoDB"
   }}
 ]
 
-If no action items exist return:
+If no decisions exist return:
 
 []
 
