@@ -1,32 +1,42 @@
-import json
-import os
-
+from services.db import conn
 from services.gemini_service import model
 
 question = input("Ask MeetingMind: ")
 
+cursor = conn.cursor()
+
+cursor.execute("""
+    SELECT meeting_id,
+           summary,
+           actions,
+           decisions,
+           risks
+    FROM meetings
+""")
+
+rows = cursor.fetchall()
+
 all_data = ""
 
-folder = "data/meetings"
+for row in rows:
 
-for file in os.listdir(folder):
+    all_data += f"""
 
-    if not file.endswith(".json"):
-        continue
+Meeting ID: {row[0]}
 
-    path = os.path.join(folder, file)
+Summary:
+{row[1]}
 
-    with open(path, "r", encoding="utf-8") as f:
+Actions:
+{row[2]}
 
-        meeting = json.load(f)
+Decisions:
+{row[3]}
 
-        all_data += json.dumps(
-            meeting,
-            indent=2
-        )
+Risks:
+{row[4]}
 
-        all_data += "\n\n"
-
+"""
 
 prompt = f"""
 You are MeetingMind AI.
