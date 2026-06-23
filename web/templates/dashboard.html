@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+    <h1>MeetingMind Dashboard</h1>
+
+    <div class="stats">
+
+        <div class="card">
+            <h2>{{ total_meetings }}</h2>
+            <p>Meetings</p>
+        </div>
+
+        <div class="card">
+            <h2>{{ total_actions }}</h2>
+            <p>Actions</p>
+        </div>
+
+        <div class="card">
+            <h2>{{ total_decisions }}</h2>
+            <p>Decisions</p>
+        </div>
+
+        <div class="card">
+            <h2>{{ total_risks }}</h2>
+            <p>Risks</p>
+        </div>
+
+    </div>
+    <div class="dashboard-card">
+
+    <h2>Action Owners</h2>
+
+    {% for owner, count in owner_stats.items() %}
+
+        <p>
+
+            <strong>{{ owner }}</strong>
+
+            <span style="float:right;">
+                {{ count }} Tasks
+            </span>
+
+        </p>
+
+        <hr>
+
+    {% endfor %}
+
+</div>
+
+    <!-- Pending Actions -->
+
+    <div class="dashboard-grid">
+
+    <!-- Pending Actions -->
+
+    <div class="dashboard-card scroll-card">
+
+        <h2>Pending Actions</h2>
+
+        {% if pending_actions %}
+
+            {% for action in pending_actions %}
+
+                <p>
+
+                    <strong>{{ action.owner }}</strong>
+
+                    <br>
+
+                    {{ action.task }}
+
+                    <br>
+
+                    Deadline:
+                    {{ action.deadline }}
+
+                </p>
+
+                <hr>
+
+            {% endfor %}
+
+        {% else %}
+
+            <p>No pending actions found.</p>
+
+        {% endif %}
+
+    </div>
+
+    <!-- Recent Risks -->
+
+    <div class="dashboard-card scroll-card">
+
+        <h2>Recent Risks</h2>
+
+        {% if recent_risks %}
+
+            {% for risk in recent_risks %}
+
+                <p>
+
+                    ⚠ {{ risk.risk }}
+
+                    <br>
+
+                    Severity:
+                    <strong>{{ risk.severity }}</strong>
+
+                </p>
+
+                <hr>
+
+            {% endfor %}
+
+        {% else %}
+
+            <p>No risks found.</p>
+
+        {% endif %}
+
+    </div>
+
+</div>
+    <!-- Meetings -->
+
+    <div class="dashboard-card scroll-card">
+
+        <h2>Recent Meetings</h2>
+
+        {% if recent_meetings %}
+
+            {% for meeting in recent_meetings %}
+
+                <p>
+
+                    <a
+                        href="/meeting/{{ meeting[0] }}"
+                        class="meeting-link"
+                    >
+                        Meeting {{ loop.index }}
+                    </a>
+
+                    <br><br>
+
+                    {{ meeting[1][:120] }}...
+
+                </p>
+
+                <hr>
+
+            {% endfor %}
+
+        {% else %}
+
+            <p>No meetings found.</p>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

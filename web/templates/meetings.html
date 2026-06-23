@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+    <h1>Meeting History</h1>
+
+    {% for meeting in meetings %}
+
+    <div class="card">
+
+        <h3>
+    <a href="/meeting/{{ meeting[0] }}">
+        {{ meeting[0] }}
+    </a>
+</h3>
+
+        <p>{{ meeting[1] }}</p>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+{% endblock %}

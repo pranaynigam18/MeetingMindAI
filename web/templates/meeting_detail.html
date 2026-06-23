@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+    <h1>{{ meeting[0] }}</h1>
+
+    <div class="card">
+
+        <h2>Summary</h2>
+
+        <p>{{ meeting[1] }}</p>
+
+    </div>
+
+    <div class="card">
+
+        <h2>Actions</h2>
+
+        {% for action in actions %}
+
+        <p>
+            ✅ {{ action.task }}
+            <br>
+            Owner: {{ action.owner }}
+            <br>
+            Deadline: {{ action.deadline }}
+        </p>
+
+        <hr>
+
+        {% endfor %}
+
+    </div>
+
+    <div class="card">
+
+        <h2>Decisions</h2>
+
+        {% for decision in decisions %}
+
+        <p>
+            ✓ {{ decision.decision }}
+        </p>
+
+        {% endfor %}
+
+    </div>
+
+    <div class="card">
+
+        <h2>Risks</h2>
+
+        {% for risk in risks %}
+
+        <p>
+            ⚠ {{ risk.risk }}
+            <br>
+            Severity: {{ risk.severity }}
+        </p>
+
+        <hr>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

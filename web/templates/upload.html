@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+    <h1>Upload Meeting</h1>
+
+    <p class="subtitle">
+        Upload an audio recording
+    </p>
+
+    <form
+        method="POST"
+        action="/upload"
+        enctype="multipart/form-data"
+    >
+
+        <input
+            type="file"
+            name="audio"
+            required
+        >
+
+        <button type="submit">
+            Process Meeting
+        </button>
+
+    </form>
+    {% if message %}
+
+<div class="answer">
+
+    {{ message }}
+
+</div>
+
+{% endif %}
+
+</div>
+
+{% endblock %}

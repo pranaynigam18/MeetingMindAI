@@ -68,4 +68,4 @@ def save_meeting(transcript, result):
 
     conn.commit()
 
-    return filepath
+    return meeting_id
