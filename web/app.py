@@ -694,3 +694,11 @@ def discussions(request: Request):
             "topics": merged_topics
         }
     )
+
+
+@app.get("/integrations")
+def integrations(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="integrations.html"
+    )
