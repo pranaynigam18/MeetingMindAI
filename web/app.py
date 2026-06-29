@@ -10,6 +10,7 @@ from services.storage import save_meeting
 import json
 import shutil
 import os
+from datetime import datetime
 
 app = FastAPI()
 
@@ -111,17 +112,45 @@ Meeting Data:
 
 
 @app.get("/meetings")
-def meetings(request: Request):
+def meetings(
+    request: Request,
+    search: str = ""
+):
 
     cursor = conn.cursor()
 
-    cursor.execute("""
-        SELECT
-            meeting_id,
-            summary
-        FROM meetings
-        ORDER BY created_at DESC
-    """)
+    if search:
+
+        cursor.execute(
+            """
+            SELECT
+                meeting_id,
+                title,
+                summary
+            FROM meetings
+            WHERE
+                title ILIKE %s
+                OR summary ILIKE %s
+            ORDER BY created_at DESC
+            """,
+            (
+                f"%{search}%",
+                f"%{search}%"
+            )
+        )
+
+    else:
+
+        cursor.execute(
+            """
+            SELECT
+                meeting_id,
+                title,
+                summary
+            FROM meetings
+            ORDER BY created_at DESC
+            """
+        )
 
     meetings = cursor.fetchall()
 
@@ -129,10 +158,10 @@ def meetings(request: Request):
         request=request,
         name="meetings.html",
         context={
-            "meetings": meetings
+            "meetings": meetings,
+            "search": search
         }
     )
-
 
 @app.get("/meeting/{meeting_id}")
 def meeting_detail(
@@ -146,6 +175,7 @@ def meeting_detail(
         """
         SELECT
             meeting_id,
+            title,
             summary,
             actions,
             decisions,
@@ -158,9 +188,9 @@ def meeting_detail(
 
     meeting = cursor.fetchone()
 
-    actions = meeting[2]
-    decisions = meeting[3]
-    risks = meeting[4]
+    actions = meeting[3]
+    decisions = meeting[4]
+    risks = meeting[5]
 
     return templates.TemplateResponse(
         request=request,
@@ -292,7 +322,7 @@ def dashboard(request: Request):
         print("\n===== OWNER STATS =====")
         print(owner_stats)
         print("=======================\n")
-
+        
     cursor.execute("""
         SELECT
             meeting_id,
@@ -313,13 +343,14 @@ def dashboard(request: Request):
     # Recent Meetings
 
     cursor.execute("""
-        SELECT
-            meeting_id,
-            summary
-        FROM meetings
-        ORDER BY created_at DESC
-        LIMIT 5
-    """)
+    SELECT
+        meeting_id,
+        title,
+        summary
+    FROM meetings
+    ORDER BY created_at DESC
+    LIMIT 5
+""")
 
     recent_meetings = cursor.fetchall()
 
@@ -336,5 +367,330 @@ def dashboard(request: Request):
             "recent_risks": recent_risks,
             "recent_meetings": recent_meetings,
             "owner_stats": owner_stats,
+        }
+    )
+
+@app.get("/decisions")
+def decisions(request: Request):
+
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            meeting_id,
+            title,
+            decisions
+        FROM meetings
+        ORDER BY created_at DESC
+    """)
+
+    rows = cursor.fetchall()
+
+    all_decisions = []
+
+    for meeting_id, title, decisions in rows:
+
+        for decision in decisions:
+
+            all_decisions.append({
+                "meeting_id": meeting_id,
+                "title": title,
+                "decision": decision["decision"]
+            })
+
+    return templates.TemplateResponse(
+        request=request,
+        name="decisions.html",
+        context={
+            "decisions": all_decisions
+        }
+    )
+
+
+@app.get("/decision-timeline")
+def decision_timeline(request: Request):
+
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            meeting_id,
+            title,
+            decisions,
+            created_at
+        FROM meetings
+        ORDER BY created_at ASC
+    """)
+
+    rows = cursor.fetchall()
+
+    decision_map = {}
+
+    for meeting_id, title, decisions, created_at in rows:
+
+        for decision in decisions:
+
+            decision_text = decision["decision"].strip()
+
+            decision_key = decision_text.lower()
+
+            if decision_key not in decision_map:
+
+                decision_map[decision_key] = {
+                    "decision": decision_text,
+                    "first_meeting_id": meeting_id,
+                    "first_meeting_title": title,
+                    "first_mention": created_at,
+                    "last_mention": created_at,
+                    "mention_count": 0,
+                    "related_meetings": []
+                }
+
+            decision_map[decision_key]["mention_count"] += 1
+            decision_map[decision_key]["related_meetings"].append(meeting_id)
+
+            if created_at > decision_map[decision_key]["last_mention"]:
+                decision_map[decision_key]["last_mention"] = created_at
+
+    merged_decisions = list(decision_map.values())
+
+    merged_decisions.sort(
+        key=lambda x: x["last_mention"],
+        reverse=True
+    )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="decision_timeline.html",
+        context={
+            "decisions": merged_decisions
+        }
+    )
+
+
+@app.get("/executive")
+def executive(request: Request):
+
+    cursor = conn.cursor()
+
+    # Meetings This Month
+    current_month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM meetings
+        WHERE created_at >= %s
+    """, (current_month,))
+
+    meetings_this_month = cursor.fetchone()[0]
+
+    # Total Decisions
+    cursor.execute("""
+        SELECT decisions
+        FROM meetings
+    """)
+
+    rows = cursor.fetchall()
+
+    total_decisions = 0
+
+    for row in rows:
+        total_decisions += len(row[0])
+
+    # Pending Actions
+    cursor.execute("""
+        SELECT actions
+        FROM meetings
+    """)
+
+    rows = cursor.fetchall()
+
+    pending_actions = 0
+
+    for row in rows:
+        pending_actions += len(row[0])
+
+    # High Risks
+    cursor.execute("""
+        SELECT risks
+        FROM meetings
+    """)
+
+    rows = cursor.fetchall()
+
+    high_risks = 0
+
+    for row in rows:
+        for risk in row[0]:
+            if risk.get("severity", "").lower() == "high":
+                high_risks += 1
+
+    # Top Action Owner
+    cursor.execute("""
+        SELECT actions
+        FROM meetings
+    """)
+
+    rows = cursor.fetchall()
+
+    owner_stats = {}
+
+    for row in rows:
+        for action in row[0]:
+            owner = action.get("owner", "Unknown")
+            if owner not in owner_stats:
+                owner_stats[owner] = 0
+            owner_stats[owner] += 1
+
+    top_action_owner = None
+    top_action_count = 0
+
+    if owner_stats:
+        top_action_owner = max(owner_stats, key=owner_stats.get)
+        top_action_count = owner_stats[top_action_owner]
+
+    # Latest Decision
+    cursor.execute("""
+        SELECT meeting_id, title, decisions, created_at
+        FROM meetings
+        WHERE decisions != '[]'::jsonb
+        ORDER BY created_at DESC
+        LIMIT 1
+    """)
+
+    latest_decision_row = cursor.fetchone()
+
+    latest_decision = None
+
+    if latest_decision_row:
+        latest_decision = {
+            "meeting_id": latest_decision_row[0],
+            "title": latest_decision_row[1],
+            "decision": latest_decision_row[2][0]["decision"] if latest_decision_row[2] else None,
+            "created_at": latest_decision_row[3]
+        }
+
+    # Latest Risk
+    cursor.execute("""
+        SELECT meeting_id, title, risks, created_at
+        FROM meetings
+        WHERE risks != '[]'::jsonb
+        ORDER BY created_at DESC
+        LIMIT 1
+    """)
+
+    latest_risk_row = cursor.fetchone()
+
+    latest_risk = None
+
+    if latest_risk_row:
+        latest_risk = {
+            "meeting_id": latest_risk_row[0],
+            "title": latest_risk_row[1],
+            "risk": latest_risk_row[2][0]["risk"] if latest_risk_row[2] else None,
+            "severity": latest_risk_row[2][0]["severity"] if latest_risk_row[2] else None,
+            "created_at": latest_risk_row[3]
+        }
+
+    # Latest Meeting
+    cursor.execute("""
+        SELECT meeting_id, title, summary, created_at
+        FROM meetings
+        ORDER BY created_at DESC
+        LIMIT 1
+    """)
+
+    latest_meeting_row = cursor.fetchone()
+
+    latest_meeting = None
+
+    if latest_meeting_row:
+        latest_meeting = {
+            "meeting_id": latest_meeting_row[0],
+            "title": latest_meeting_row[1],
+            "summary": latest_meeting_row[2],
+            "created_at": latest_meeting_row[3]
+        }
+
+    return templates.TemplateResponse(
+        request=request,
+        name="executive.html",
+        context={
+            "meetings_this_month": meetings_this_month,
+            "total_decisions": total_decisions,
+            "pending_actions": pending_actions,
+            "high_risks": high_risks,
+            "top_action_owner": top_action_owner,
+            "top_action_count": top_action_count,
+            "latest_decision": latest_decision,
+            "latest_risk": latest_risk,
+            "latest_meeting": latest_meeting
+        }
+    )
+
+
+@app.get("/discussions")
+def discussions(request: Request):
+
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            meeting_id,
+            title,
+            topics,
+            created_at
+        FROM meetings
+        ORDER BY created_at ASC
+    """)
+
+    rows = cursor.fetchall()
+
+    topic_map = {}
+
+    for meeting_id, title, topics, created_at in rows:
+
+        if not topics:
+            continue
+
+        for topic in topics:
+
+            if isinstance(topic, dict):
+                topic_text = topic.get("topic", "").strip()
+            else:
+                topic_text = topic.strip()
+
+            topic_key = topic_text.lower()
+
+            if topic_key not in topic_map:
+
+                topic_map[topic_key] = {
+                    "topic": topic_text,
+                    "first_meeting_id": meeting_id,
+                    "first_meeting_title": title,
+                    "first_mention": created_at,
+                    "last_mention": created_at,
+                    "mention_count": 0,
+                    "related_meetings": []
+                }
+
+            topic_map[topic_key]["mention_count"] += 1
+            topic_map[topic_key]["related_meetings"].append(meeting_id)
+
+            if created_at > topic_map[topic_key]["last_mention"]:
+                topic_map[topic_key]["last_mention"] = created_at
+
+    merged_topics = list(topic_map.values())
+
+    merged_topics.sort(
+        key=lambda x: x["last_mention"],
+        reverse=True
+    )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="discussions.html",
+        context={
+            "topics": merged_topics
         }
     )

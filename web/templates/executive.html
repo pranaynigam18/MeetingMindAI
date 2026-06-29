@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+    <h1>Executive Dashboard</h1>
+
+    <p class="subtitle">
+        High-level overview of organizational intelligence.
+    </p>
+
+    <div class="stats">
+
+        <div class="card">
+            <h2>{{ meetings_this_month }}</h2>
+            <p>Meetings This Month</p>
+        </div>
+
+        <div class="card">
+            <h2>{{ total_decisions }}</h2>
+            <p>Total Decisions</p>
+        </div>
+
+        <div class="card">
+            <h2>{{ pending_actions }}</h2>
+            <p>Pending Actions</p>
+        </div>
+
+        <div class="card">
+            <h2>{{ high_risks }}</h2>
+            <p>High Risks</p>
+        </div>
+
+    </div>
+
+    <div class="dashboard-card">
+
+        <h2>Top Action Owner</h2>
+
+        {% if top_action_owner %}
+
+            <p>
+
+                <strong>{{ top_action_owner }}</strong>
+
+                <span style="float:right;">
+                    {{ top_action_count }} Tasks
+                </span>
+
+            </p>
+
+        {% else %}
+
+            <p>No action owners found.</p>
+
+        {% endif %}
+
+    </div>
+
+    <div class="dashboard-grid">
+
+        <div class="dashboard-card">
+
+            <h2>Latest Decision</h2>
+
+            {% if latest_decision %}
+
+                <p>
+
+                    <strong>{{ latest_decision.decision }}</strong>
+
+                    <br><br>
+
+                    <a href="/meeting/{{ latest_decision.meeting_id }}">
+
+                        {% if latest_decision.title %}
+                            {{ latest_decision.title }}
+                        {% else %}
+                            Meeting {{ latest_decision.meeting_id }}
+                        {% endif %}
+
+                    </a>
+
+                    <br><br>
+
+                    {{ latest_decision.created_at.strftime("%Y-%m-%d %H:%M") }}
+
+                </p>
+
+            {% else %}
+
+                <p>No decisions found.</p>
+
+            {% endif %}
+
+        </div>
+
+        <div class="dashboard-card">
+
+            <h2>Latest Risk</h2>
+
+            {% if latest_risk %}
+
+                <p>
+
+                    ⚠ <strong>{{ latest_risk.risk }}</strong>
+
+                    <br><br>
+
+                    Severity:
+                    <strong>{{ latest_risk.severity }}</strong>
+
+                    <br><br>
+
+                    <a href="/meeting/{{ latest_risk.meeting_id }}">
+
+                        {% if latest_risk.title %}
+                            {{ latest_risk.title }}
+                        {% else %}
+                            Meeting {{ latest_risk.meeting_id }}
+                        {% endif %}
+
+                    </a>
+
+                    <br><br>
+
+                    {{ latest_risk.created_at.strftime("%Y-%m-%d %H:%M") }}
+
+                </p>
+
+            {% else %}
+
+                <p>No risks found.</p>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    <div class="dashboard-card">
+
+        <h2>Latest Meeting</h2>
+
+        {% if latest_meeting %}
+
+            <p>
+
+                <a
+                    href="/meeting/{{ latest_meeting.meeting_id }}"
+                    class="meeting-link"
+                >
+
+                    {% if latest_meeting.title %}
+                        {{ latest_meeting.title }}
+                    {% else %}
+                        Meeting {{ latest_meeting.meeting_id }}
+                    {% endif %}
+
+                </a>
+
+                <br><br>
+
+                {{ latest_meeting.summary[:200] }}...
+
+                <br><br>
+
+                {{ latest_meeting.created_at.strftime("%Y-%m-%d %H:%M") }}
+
+            </p>
+
+        {% else %}
+
+            <p>No meetings found.</p>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -4,13 +4,13 @@
 
 <div class="container">
 
-    <h1>{{ meeting[0] }}</h1>
+    <h1>{{ meeting[1] }}</h1>
 
     <div class="card">
 
         <h2>Summary</h2>
 
-        <p>{{ meeting[1] }}</p>
+        <p>{{ meeting[2] }}</p>
 
     </div>
 
@@ -21,11 +21,19 @@
         {% for action in actions %}
 
         <p>
+
             ✅ {{ action.task }}
+
             <br>
-            Owner: {{ action.owner }}
+
+            <strong>Owner:</strong>
+            {{ action.owner }}
+
             <br>
-            Deadline: {{ action.deadline }}
+
+            <strong>Deadline:</strong>
+            {{ action.deadline }}
+
         </p>
 
         <hr>
@@ -41,7 +49,9 @@
         {% for decision in decisions %}
 
         <p>
+
             ✓ {{ decision.decision }}
+
         </p>
 
         {% endfor %}
@@ -55,9 +65,14 @@
         {% for risk in risks %}
 
         <p>
+
             ⚠ {{ risk.risk }}
+
             <br>
-            Severity: {{ risk.severity }}
+
+            <strong>Severity:</strong>
+            {{ risk.severity }}
+
         </p>
 
         <hr>

@@ -142,12 +142,16 @@
                         href="/meeting/{{ meeting[0] }}"
                         class="meeting-link"
                     >
-                        Meeting {{ loop.index }}
+                        {% if meeting[1] %}
+    {{ meeting[1] }}
+{% else %}
+    Meeting {{ loop.index }}
+{% endif %}
                     </a>
 
                     <br><br>
 
-                    {{ meeting[1][:120] }}...
+                    {{ meeting[2][:120] }}...
 
                 </p>
 

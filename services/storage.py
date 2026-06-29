@@ -5,7 +5,7 @@ from datetime import datetime
 from services.db import conn
 
 
-def save_meeting(transcript, result):
+def save_meeting(transcript, result, workspace_id=None):
 
     os.makedirs("data/meetings", exist_ok=True)
 
@@ -13,6 +13,7 @@ def save_meeting(transcript, result):
 
     meeting_data = {
         "meeting_id": meeting_id,
+        "title": result["title"],
         "people": result["people"],
         "topics": result["topics"],
         "created_at": datetime.now().isoformat(),
@@ -33,15 +34,30 @@ def save_meeting(transcript, result):
             ensure_ascii=False
         )
 
-    # PostgreSQL Save
-
     cursor = conn.cursor()
+
+    # Get default workspace_id if not provided
+    if workspace_id is None:
+        cursor.execute("""
+            SELECT workspace_id
+            FROM workspaces
+            WHERE slug = 'default'
+            LIMIT 1
+        """)
+
+        workspace_result = cursor.fetchone()
+
+        if workspace_result:
+            workspace_id = workspace_result[0]
+        else:
+            workspace_id = None
 
     cursor.execute(
         """
         INSERT INTO meetings
         (
             meeting_id,
+            title,
             created_at,
             summary,
             transcript,
@@ -49,12 +65,14 @@ def save_meeting(transcript, result):
             topics,
             actions,
             decisions,
-            risks
+            risks,
+            workspace_id
         )
-        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
         """,
         (
             meeting_id,
+            result["title"],
             datetime.now(),
             result["summary"],
             transcript,
@@ -62,7 +80,8 @@ def save_meeting(transcript, result):
             json.dumps(result["topics"]),
             json.dumps(result["actions"]),
             json.dumps(result["decisions"]),
-            json.dumps(result["risks"])
+            json.dumps(result["risks"]),
+            workspace_id
         )
     )
 

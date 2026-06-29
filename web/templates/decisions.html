@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+    <h1>Decision Center</h1>
+
+    <p class="subtitle">
+        All important company decisions extracted by AI.
+    </p>
+
+    {% if decisions %}
+
+        {% for item in decisions %}
+
+        <div class="card">
+
+            <h3>
+                ✅ {{ item.decision }}
+            </h3>
+
+            <p>
+
+                <strong>Meeting:</strong>
+
+                <a href="/meeting/{{ item.meeting_id }}">
+
+                    {% if item.title %}
+                        {{ item.title }}
+                    {% else %}
+                        {{ item.meeting_id }}
+                    {% endif %}
+
+                </a>
+
+            </p>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="card">
+
+            <h3>No decisions found.</h3>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

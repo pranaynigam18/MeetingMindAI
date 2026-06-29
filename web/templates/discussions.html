@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+
+    <h1>Repeated Discussions</h1>
+
+    <p class="subtitle">
+        Track topics that appear across multiple meetings.
+    </p>
+
+    {% if topics %}
+
+        {% for item in topics %}
+
+        <div class="card">
+
+            <h3>
+                💬 {{ item.topic }}
+            </h3>
+
+            <p>
+
+                <strong>First Meeting:</strong>
+
+                <a href="/meeting/{{ item.first_meeting_id }}">
+
+                    {% if item.first_meeting_title %}
+                        {{ item.first_meeting_title }}
+                    {% else %}
+                        {{ item.first_meeting_id }}
+                    {% endif %}
+
+                </a>
+
+            </p>
+
+            <p>
+
+                <strong>First Mention:</strong>
+                {{ item.first_mention.strftime("%Y-%m-%d %H:%M") }}
+
+            </p>
+
+            <p>
+
+                <strong>Latest Mention:</strong>
+                {{ item.last_mention.strftime("%Y-%m-%d %H:%M") }}
+
+            </p>
+
+            <p>
+
+                <strong>Mention Count:</strong>
+                {{ item.mention_count }}
+
+            </p>
+
+            <p>
+
+                <strong>Related Meeting IDs:</strong>
+                {{ item.related_meetings | join(", ") }}
+
+            </p>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="card">
+
+            <h3>No discussions found.</h3>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

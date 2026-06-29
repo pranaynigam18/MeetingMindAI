@@ -6,21 +6,65 @@
 
     <h1>Meeting History</h1>
 
-    {% for meeting in meetings %}
+    <form action="/meetings" method="get" style="margin-bottom:30px; display:flex; gap:10px;">
 
-    <div class="card">
+        <input
+            type="text"
+            name="search"
+            placeholder="Search meetings..."
+            value="{{ search }}"
+        >
 
-        <h3>
-    <a href="/meeting/{{ meeting[0] }}">
-        {{ meeting[0] }}
-    </a>
-</h3>
+        <button type="submit">
+            Search
+        </button>
 
-        <p>{{ meeting[1] }}</p>
+    </form>
 
-    </div>
+    {% if meetings %}
 
-    {% endfor %}
+        {% for meeting in meetings %}
+
+        <div class="card">
+
+            <h3>
+
+                <a
+                    href="/meeting/{{ meeting[0] }}"
+                    class="meeting-link"
+                >
+
+                    {% if meeting[1] %}
+                        {{ meeting[1] }}
+                    {% else %}
+                        {{ meeting[0] }}
+                    {% endif %}
+
+                </a>
+
+            </h3>
+
+            <p>
+
+                {{ meeting[2][:180] }}...
+
+            </p>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="card">
+
+            <h3>No meetings found.</h3>
+
+            <p>Try a different search.</p>
+
+        </div>
+
+    {% endif %}
 
 </div>
 
