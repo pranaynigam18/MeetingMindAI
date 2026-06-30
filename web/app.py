@@ -7,12 +7,15 @@ from services.gemini_service import model
 from services.transcriber import transcribe_audio
 from services.intelligence_engine import analyze_meeting
 from services.storage import save_meeting
+from routes.auth import router as auth_router
 import json
 import shutil
 import os
 from datetime import datetime
 
 app = FastAPI()
+
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
 
 app.mount(
     "/static",
